@@ -95,7 +95,7 @@ level 2+) to apply the new values without restarting.
 ## Requirements
 
 - Minecraft (matches the version in the jar)
-- Fabric Loader 0.19.2+
+- Fabric Loader 0.19.5+
 - Fabric API
 - Java 25
 

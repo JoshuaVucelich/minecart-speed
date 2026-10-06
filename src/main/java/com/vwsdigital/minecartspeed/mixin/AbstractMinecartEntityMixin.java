@@ -85,7 +85,7 @@ public abstract class AbstractMinecartEntityMixin {
         double firstStep = Math.min(targetPerTick, MinecartBoost.VANILLA_MAX_SPEED);
         double scale = firstStep / horizontal;
         self.setDeltaMovement(motion.x * scale, motion.y, motion.z * scale);
-        self.hurtMarked = true;
+        self.syncVelocity = true;
 
         if (plan.boost() && config.ejectPassengersOnBoost && self.isVehicle()) {
             self.ejectPassengers();
@@ -142,7 +142,7 @@ public abstract class AbstractMinecartEntityMixin {
             Vec3 m = self.getDeltaMovement();
             self.setDeltaMovement(m.x, 0.0, m.z);
             self.setOnGround(true);
-            self.hurtMarked = true;
+            self.syncVelocity = true;
             minecartSpeed$lastRailPos = snap;
         } else {
             minecartSpeed$lastRailPos = null;

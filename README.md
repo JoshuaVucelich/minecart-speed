@@ -18,7 +18,7 @@ through turns and slopes.
 
 ## Requirements
 - Minecraft (matches the version configured in `gradle.properties`)
-- Fabric Loader (`>= 0.19.2`)
+- Fabric Loader (`>= 0.19.5`)
 - Fabric API
 - Java 25
 
