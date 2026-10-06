@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "minecart-speed",
+	"version": "${version}",
+	"name": "Minecart Speed",
+	"description": "Boosts minecart speed (default 120 blocks/sec) when a powered rail sits on top of a configurable trigger block (default: redstone block). Server-configurable.",
+	"authors": [
+		"VWS Digital"
+	],
+	"contact": {
+		"homepage": "https://github.com/vwsdigital/minecart-speed",
+		"sources": "https://github.com/vwsdigital/minecart-speed"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/minecart-speed/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.vwsdigital.minecartspeed.MinecartSpeed"
+		],
+		"client": [
+			"com.vwsdigital.minecartspeed.client.MinecartSpeedClient"
+		]
+	},
+	"mixins": [
+		"minecart-speed.mixins.json",
+		{
+			"config": "minecart-speed.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.1",
+		"minecraft": "~26.1.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
