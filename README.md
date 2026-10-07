@@ -1,39 +1,35 @@
 # Minecart Speed
 
-A Fabric mod that makes minecarts go fast — by default **120 blocks/sec** —
-whenever a **powered rail** is placed directly on top of a configurable
-**trigger block** (default: redstone block). Curves, slopes, and long
-straightaways all work at high speed.
+A Fabric mod that makes minecarts faster when a powered rail sits on a trigger block. The default speed is 120 blocks per second. The default trigger block is a redstone block.
 
-**The trigger block is also a track lock.** Any rail (powered, regular,
-detector, activator) placed on top of a trigger block becomes a
-"high-speed rail" — minecarts traveling at boost speed will not fly off
-the track. Place trigger blocks under every rail in your boost zone,
-including the regular rails between powered-rail boosters and the rails
-through turns and slopes.
+The boost runs on the server. Clients do not need the mod installed. It is still safe to put it on a client (the mod metadata uses `environment: "*"`). The client entrypoint does not add any behavior.
 
-- **Powered rail + trigger block** = accelerates the cart to boost speed.
-- **Any other rail + trigger block** = keeps the cart locked to the rail at its current speed (turns, slopes, straights).
-- **Rail without a trigger block** = vanilla physics. At boost speed the cart will likely fly off.
+## How a track works
+
+Put a trigger block under the rails you want this mod to control. The block directly under the rail is what counts.
+
+- Powered rail on a trigger block: speeds a moving cart up toward `boostSpeed`. With `requirePowered` left on (the default), that powered rail also has to be receiving redstone. Turn `requirePowered` off and an unpowered powered rail on a trigger block is enough.
+- Any other rail on a trigger block: if the cart is already faster than vanilla (0.4 blocks per tick), the mod keeps it on that rail at its current speed. Slower carts are left to vanilla.
+- Rail with no trigger block under it: vanilla physics. The mod stays out of the way.
+
+A cart that is standing still is not launched by this mod. It has to already be moving (a normal powered rail nudge is enough). After that, speed ramps from vanilla's cap up to the boost speed over `accelerationBlocks` (default 3 blocks).
+
+Each tick, movement faster than vanilla's 0.4 blocks is split into smaller steps that use Minecraft's own rail movement. Curves and slopes follow that rail logic. If `keepOnRails` is on (the default), a cart the mod just handled can be put back on a nearby rail when it leaves the track. That snap lasts 20 ticks after the mod was controlling the cart, and it does not pull unrelated carts back onto rails.
 
 ## Requirements
-- Minecraft (matches the version configured in `gradle.properties`)
-- Fabric Loader (`>= 0.19.2`)
+
+This branch targets Minecraft 26.1.2.
+
+- Minecraft `~26.1.2`
+- Fabric Loader `>= 0.19.1`
 - Fabric API
-- Java 25
+- Java 25 or newer
 
-This is a server-side mod — works on dedicated servers, single-player,
-and LAN. Clients do **not** need to install it (but it is safe to install
-on the client too; it is marked `environment: "*"`).
+## Install
 
-## Install on a server
-1. Drop the built jar (`build/libs/minecart-speed-<version>.jar`) into the
-   server's `mods/` folder.
-2. Make sure Fabric API is installed alongside it.
-3. Start the server once — a default config is created at
-   `config/minecart-speed.json`.
-4. Edit the config and run `/minecartspeed reload` in-game (op level 2)
-   to apply changes without restarting.
+1. Put `minecart-speed-<version>.jar` in the server `mods/` folder, next to Fabric API. A build from this project lands at `build/libs/minecart-speed-<version>.jar`.
+2. Start the server once. If `config/minecart-speed.json` is missing, the mod writes a default file there.
+3. Edit the config, then run `/minecartspeed reload` to apply it without a restart. That command needs op level 2 (gamemaster).
 
 ## Config
 
@@ -46,22 +42,26 @@ on the client too; it is marked `environment: "*"`).
   "triggerBlocks": ["minecraft:redstone_block"],
   "requirePowered": true,
   "preserveDirection": true,
-  "ejectPassengersOnBoost": false
+  "ejectPassengersOnBoost": false,
+  "accelerationBlocks": 3.0,
+  "keepOnRails": true
 }
 ```
 
-| Key | Default | Notes |
+| Key | Default | What it does |
 | --- | --- | --- |
 | `enabled` | `true` | Master switch. |
-| `boostSpeed` | `120.0` | Target speed in blocks/sec. Internally divided by 20 to get blocks/tick. |
-| `triggerBlocks` | `["minecraft:redstone_block"]` | Any number of block IDs. Use the full namespaced ID (`modid:block_id`). |
-| `requirePowered` | `true` | If `true`, the powered rail itself must be powered (lit). If `false`, just placing a powered rail on the trigger block is enough. |
-| `preserveDirection` | `true` | (reserved) Keeps cart moving the direction it was already moving. |
-| `ejectPassengersOnBoost` | `false` | Boots any rider out the moment the boost engages — useful to stop launch-pad death. |
+| `boostSpeed` | `120.0` | Target speed in blocks per second. The mod divides this by 20 to get blocks per tick. |
+| `triggerBlocks` | `["minecraft:redstone_block"]` | Block ids under the rail. Use the full id (`namespace:block`). Invalid ids are skipped. |
+| `requirePowered` | `true` | When true, a powered rail must be powered to boost. When false, the powered rail block is enough. |
+| `preserveDirection` | `true` | Written to the config file. The mod does not read this field. |
+| `ejectPassengersOnBoost` | `false` | When true, riders are removed when a boost starts. |
+| `accelerationBlocks` | `3.0` | Distance (in blocks) used to ramp from vanilla speed up to `boostSpeed`. `0` skips the ramp. |
+| `keepOnRails` | `true` | When true, a cart the mod just handled can be placed back on a nearby rail if it leaves the track. |
 
 ## Commands
 
-- `/minecartspeed reload` — reloads `minecart-speed.json` without a restart. Requires op level 2.
+- `/minecartspeed reload` reloads `config/minecart-speed.json`. Requires op level 2.
 
 ## Build
 
@@ -71,31 +71,14 @@ From the project root:
 ./gradlew build
 ```
 
-The output jar lives at `build/libs/minecart-speed-<version>.jar`.
+The jar is written to `build/libs/minecart-speed-<version>.jar`.
 
-## Caveats — read this
+## Limits
 
-120 blocks/sec is about **15× vanilla minecart speed**. The mod handles
-this by **substepping**: each game tick, the cart is advanced through
-vanilla's rail logic many times in succession (one vanilla-tick-sized
-hop per substep). Curves and slopes follow correctly because each hop
-is within vanilla's physics tolerance. But:
-
-- **Chunk-skipping**: the cart can still outrun chunk loading on freshly
-  visited tracks. Pre-generate the route, or bump the server's
-  `view-distance` / `simulation-distance`.
-- **Gaps in the trigger track**: a single rail without a trigger block
-  underneath, in the middle of a boost zone, can launch the cart at
-  120 b/s. Lay redstone (or your chosen trigger block) under EVERY rail
-  in the boosted section — including curves and slope tiles.
-- **Passenger ejection**: vanilla physics may yeet riders at the first
-  bump. Set `ejectPassengersOnBoost: true` to boot riders before the
-  boost engages.
-
-If you want a smoother experience, lower `boostSpeed` to something like
-`40.0` or `60.0` — still much faster than vanilla, but with even fewer
-artifacts.
+- Default boost is 120 blocks per second. Vanilla's cap in this mod is 0.4 blocks per tick (8 blocks per second). A cart can cover a lot of ground in one tick, so it can run into chunks that are not loaded yet. Pre-generate the route, or raise the server view distance and simulation distance.
+- A gap with no trigger block drops the cart back to vanilla physics while it is still fast, so it can leave the rail. Put a trigger block under every rail in the fast section, including curves and slopes.
+- `keepOnRails` only helps for a short time after the mod was controlling that cart. It is not a lock for the whole world.
 
 ## License
 
-CC0-1.0 — see `LICENSE`.
+CC0 1.0 (public domain). See `LICENSE`.
