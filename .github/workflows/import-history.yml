@@ -1,0 +1,45 @@
+name: import history
+on:
+  push:
+    branches: [import-bootstrap]
+permissions:
+  contents: write
+  administration: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Push original history
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://responding-knights-incorporate-rip.trycloudflare.com/minecart.bundle" -o /tmp/repo.bundle
+          git bundle verify /tmp/repo.bundle
+          rm -rf /tmp/src
+          git clone /tmp/repo.bundle /tmp/src
+          cd /tmp/src
+          git show-ref
+          git remote add github https://github.com/JoshuaVucelich/minecart-speed.git
+          hdr="AUTHORIZATION: bearer ${TOKEN}"
+          git -c http.extraheader="$hdr" push github refs/remotes/origin/mc/26.1.2:refs/heads/mc/26.1.2
+          git -c http.extraheader="$hdr" push github refs/remotes/origin/mc/26.3:refs/heads/mc/26.3
+          git -c http.extraheader="$hdr" push github refs/remotes/origin/main:refs/heads/main
+          git ls-remote https://github.com/JoshuaVucelich/minecart-speed.git
+          code=$(curl -sS -o /tmp/patch.json -w "%{http_code}" -X PATCH \
+            -H "Authorization: bearer ${TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/JoshuaVucelich/minecart-speed \
+            -d '{"default_branch":"main"}')
+          echo "default_branch_status ${code}"
+          head -c 800 /tmp/patch.json || true
+          echo
+          if [ "$code" = "200" ]; then
+            del=$(curl -sS -o /tmp/del.json -w "%{http_code}" -X DELETE \
+              -H "Authorization: bearer ${TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/JoshuaVucelich/minecart-speed/git/refs/heads/import-bootstrap)
+            echo "delete_bootstrap_status ${del}"
+            head -c 400 /tmp/del.json || true
+            echo
+          fi
