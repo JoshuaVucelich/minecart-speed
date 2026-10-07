@@ -4,7 +4,6 @@ on:
     branches: [import-bootstrap]
 permissions:
   contents: write
-  administration: write
 jobs:
   import:
     runs-on: ubuntu-latest
@@ -24,22 +23,35 @@ jobs:
           hdr="AUTHORIZATION: bearer ${TOKEN}"
           git -c http.extraheader="$hdr" push github refs/remotes/origin/mc/26.1.2:refs/heads/mc/26.1.2
           git -c http.extraheader="$hdr" push github refs/remotes/origin/mc/26.3:refs/heads/mc/26.3
-          git -c http.extraheader="$hdr" push github refs/remotes/origin/main:refs/heads/main
-          git ls-remote https://github.com/JoshuaVucelich/minecart-speed.git
-          code=$(curl -sS -o /tmp/patch.json -w "%{http_code}" -X PATCH \
-            -H "Authorization: bearer ${TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/JoshuaVucelich/minecart-speed \
-            -d '{"default_branch":"main"}')
-          echo "default_branch_status ${code}"
-          head -c 800 /tmp/patch.json || true
-          echo
-          if [ "$code" = "200" ]; then
-            del=$(curl -sS -o /tmp/del.json -w "%{http_code}" -X DELETE \
+          set +e
+          git -c http.extraheader="$hdr" push --force github refs/remotes/origin/main:refs/heads/main
+          push_status=$?
+          set -e
+          echo "main_force_push_status ${push_status}"
+          if [ "$push_status" != "0" ]; then
+            code=$(curl -sS -o /tmp/ref.json -w "%{http_code}" -X PATCH \
               -H "Authorization: bearer ${TOKEN}" \
               -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/JoshuaVucelich/minecart-speed/git/refs/heads/import-bootstrap)
-            echo "delete_bootstrap_status ${del}"
-            head -c 400 /tmp/del.json || true
+              https://api.github.com/repos/JoshuaVucelich/minecart-speed/git/refs/heads/main \
+              -d '{"sha":"a698077189bdd730147c0d86e3ce8839c2255d97","force":true}')
+            echo "main_ref_update_status ${code}"
+            head -c 500 /tmp/ref.json || true
             echo
+            if [ "$code" != "200" ]; then
+              exit 1
+            fi
           fi
+          git ls-remote https://github.com/JoshuaVucelich/minecart-speed.git
+          main_sha=$(git ls-remote https://github.com/JoshuaVucelich/minecart-speed.git refs/heads/main | awk '{print $1}')
+          old_sha=$(git ls-remote https://github.com/JoshuaVucelich/minecart-speed.git refs/heads/mc/26.1.2 | awk '{print $1}')
+          new_sha=$(git ls-remote https://github.com/JoshuaVucelich/minecart-speed.git refs/heads/mc/26.3 | awk '{print $1}')
+          test "$main_sha" = "a698077189bdd730147c0d86e3ce8839c2255d97"
+          test "$new_sha" = "a698077189bdd730147c0d86e3ce8839c2255d97"
+          test "$old_sha" = "f016349d7d93d728bc8b6a4f04e1349c120267a0"
+          del=$(curl -sS -o /tmp/del.json -w "%{http_code}" -X DELETE \
+            -H "Authorization: bearer ${TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/JoshuaVucelich/minecart-speed/git/refs/heads/import-bootstrap)
+          echo "delete_bootstrap_status ${del}"
+          head -c 300 /tmp/del.json || true
+          echo
