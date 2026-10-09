@@ -42,6 +42,10 @@ dependencies {
 
 tasks.named("test") {
 	useJUnitPlatform()
+	// ModDevGradle exposes Minecraft on the compile classpath. The test
+	// runtime classpath does not inherit it, and MinecartBoost references
+	// those classes even for the pure ramp math.
+	classpath += sourceSets.main.compileClasspath
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
