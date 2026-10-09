@@ -1,8 +1,8 @@
 # Minecart Speed
 
-A Fabric mod that makes minecarts faster when a powered rail sits on a trigger block. The default speed is 120 blocks per second. The default trigger block is a redstone block.
+A NeoForge mod that makes minecarts faster when a powered rail sits on a trigger block. The default speed is 120 blocks per second. The default trigger block is a redstone block.
 
-The boost runs on the server. Clients do not need the mod installed. It is still safe to put it on a client (the mod metadata uses `environment: "*"`). The client entrypoint does not add any behavior.
+The boost runs on the server. Clients do not need the mod installed. It is still safe to put it on a client.
 
 ## How a track works
 
@@ -18,16 +18,17 @@ Each tick, movement faster than vanilla's 0.4 blocks is split into smaller steps
 
 ## Requirements
 
-This branch targets Minecraft 26.2.
+This branch targets Minecraft 26.2 on NeoForge. NeoForge 26.3 is still beta, so 26.2 is the newest stable line.
 
-- Minecraft `~26.2`
-- Fabric Loader `>= 0.19.5`
-- Fabric API
+- Minecraft `26.2`
+- NeoForge `26.2.0.89` or newer
 - Java 25 or newer
+
+The NeoForge mod id is `minecart_speed`. NeoForge mod ids cannot contain a hyphen. The command is still `/minecartspeed`, and the config file is still `config/minecart-speed.json`.
 
 ## Install
 
-1. Put `minecart-speed-<version>.jar` in the server `mods/` folder, next to Fabric API. A build from this project lands at `build/libs/minecart-speed-<version>.jar`.
+1. Put `minecart-speed-<version>.jar` in the server `mods/` folder. A build from this project lands at `build/libs/minecart-speed-<version>.jar`.
 2. Start the server once. If `config/minecart-speed.json` is missing, the mod writes a default file there.
 3. Edit the config, then run `/minecartspeed reload` to apply it without a restart. That command needs op level 2 (gamemaster).
 

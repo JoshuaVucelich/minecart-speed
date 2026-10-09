@@ -1,16 +1,19 @@
 package com.vwsdigital.minecartspeed;
 
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permission;
 import net.minecraft.server.permissions.PermissionLevel;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MinecartSpeed implements ModInitializer {
-	public static final String MOD_ID = "minecart-speed";
+@Mod(MinecartSpeed.MOD_ID)
+public class MinecartSpeed {
+	public static final String MOD_ID = "minecart_speed";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	private static final Permission OP_PERMISSION =
@@ -22,23 +25,24 @@ public class MinecartSpeed implements ModInitializer {
 		return CONFIG;
 	}
 
-	@Override
-	public void onInitialize() {
+	public MinecartSpeed(IEventBus modEventBus) {
 		CONFIG = MinecartSpeedConfig.loadOrCreate();
 		LOGGER.info("Minecart Speed loaded — boost {} blocks/sec, triggers: {}",
 				CONFIG.boostSpeed, CONFIG.triggerBlocks);
 
-		CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, environment) -> {
-			dispatcher.register(Commands.literal("minecartspeed")
-					.requires(source -> source.permissions().hasPermission(OP_PERMISSION))
-					.then(Commands.literal("reload").executes(ctx -> {
-						CONFIG = MinecartSpeedConfig.loadOrCreate();
-						ctx.getSource().sendSuccess(
-								() -> Component.literal("Minecart Speed config reloaded ("
-										+ CONFIG.boostSpeed + " blocks/sec)"),
-								true);
-						return 1;
-					})));
-		});
+		NeoForge.EVENT_BUS.addListener(MinecartSpeed::registerCommands);
+	}
+
+	private static void registerCommands(RegisterCommandsEvent event) {
+		event.getDispatcher().register(Commands.literal("minecartspeed")
+				.requires(source -> source.permissions().hasPermission(OP_PERMISSION))
+				.then(Commands.literal("reload").executes(ctx -> {
+					CONFIG = MinecartSpeedConfig.loadOrCreate();
+					ctx.getSource().sendSuccess(
+							() -> Component.literal("Minecart Speed config reloaded ("
+									+ CONFIG.boostSpeed + " blocks/sec)"),
+							true);
+					return 1;
+				})));
 	}
 }

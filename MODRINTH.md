@@ -94,9 +94,8 @@ level 2+) to apply the new values without restarting.
 
 ## Requirements
 
-- Minecraft (matches the version in the jar)
-- Fabric Loader 0.19.5+
-- Fabric API
+- Minecraft 26.2
+- NeoForge 26.2.0.89+
 - Java 25
 
 Server-side only. Safe to also install on clients.

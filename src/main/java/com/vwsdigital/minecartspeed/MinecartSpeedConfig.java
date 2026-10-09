@@ -2,8 +2,8 @@ package com.vwsdigital.minecartspeed;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.neoforged.fml.loading.FMLPaths;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 
@@ -81,6 +81,6 @@ public final class MinecartSpeedConfig {
     }
 
     private static Path configPath() {
-        return FabricLoader.getInstance().getConfigDir().resolve("minecart-speed.json");
+        return FMLPaths.CONFIGDIR.get().resolve("minecart-speed.json");
     }
 }
