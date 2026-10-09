@@ -18,12 +18,12 @@ Each tick, movement faster than vanilla's 0.4 blocks is split into smaller steps
 
 ## Requirements
 
-This branch targets Minecraft 26.1.2.
+This branch targets Minecraft 1.21.11, the latest 1.21 patch with a current Fabric API release.
 
-- Minecraft `~26.1.2`
+- Minecraft `~1.21.11`
 - Fabric Loader `>= 0.19.5`
 - Fabric API
-- Java 25 or newer
+- Java 21 or newer
 
 ## Install
 

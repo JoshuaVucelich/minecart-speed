@@ -97,7 +97,7 @@ level 2+) to apply the new values without restarting.
 - Minecraft (matches the version in the jar)
 - Fabric Loader 0.19.5+
 - Fabric API
-- Java 25
+- Java 21
 
 Server-side only. Safe to also install on clients.
 
